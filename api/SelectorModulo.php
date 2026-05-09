@@ -49,7 +49,7 @@ if ($httpCode == 200) {
 if (isset($_POST['set_modulo'])) {
     $_SESSION['modulo_activo'] = $_POST['set_modulo'];
     // REDIRIGIMOS CON EL PARÁMETRO EXACTO DE LA BD
-    header("Location: CEC.xsp?jsessionid=" . $jsessionidBD);
+    header("Location: CEC.php?jsessionid=" . $jsessionidBD);
     exit();
 }
 ?>
