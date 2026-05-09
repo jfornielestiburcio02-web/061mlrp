@@ -1,18 +1,22 @@
 <?php
 // Configuración de tu proyecto Firebase
 $projectId = "yr92q8h4y5972h4y952qhy3f"; 
-$destinoBase = "/SelectorModulo.php";
+$destinoBase = "SelectorModulo.php"; // Nombre del archivo al que redirige
 
-// 1. Verificar si ya existe una cookie
+// 1. Verificar si ya existe una cookie válida para saltar el login
 if (isset($_COOKIE['auth_061_token'])) {
-    // Si ya existe la cookie, recuperamos el token (que ahora tiene el ID pegado)
     $data = explode("|", base64_decode($_COOKIE['auth_061_token']));
+    $usuarioDoc = $data[0] ?? '';
     $idExistente = $data[1] ?? '';
-    header("Location: $destinoBase?jsessionid=$idExistente");
-    exit();
+    
+    // Si tenemos los datos, vamos directo al selector con el token actual
+    if ($usuarioDoc && $idExistente) {
+        header("Location: $destinoBase?jsessionid=$idExistente");
+        exit();
+    }
 }
 
-// 2. Procesar POST
+// 2. Procesar el formulario de Login (POST)
 $usuario = $_POST['usuario'] ?? '';
 $passInput = $_POST['password'] ?? '';
 
@@ -21,9 +25,10 @@ if (!$usuario || !$passInput) {
     exit();
 }
 
+// Limpiar el ID del documento (ej: jmatamorosd)
 $usuarioDoc = preg_replace('/[^a-zA-Z0-9]/', '', $usuario);
 
-// 3. Consulta a Firestore (GET)
+// 3. Consulta a Firestore para validar credenciales
 $url = "https://firestore.googleapis.com/v1/projects/{$projectId}/databases/(default)/documents/empleadosX/{$usuarioDoc}";
 
 $ch = curl_init();
@@ -41,10 +46,12 @@ if ($httpCode == 200) {
     if ($passInput === $passFirebase) {
         // --- LOGIN EXITOSO ---
 
-        // A) Generar un NUEVO jsessionid aleatorio (ejemplo: cadena alfanumérica de 20 caracteres)
-        $nuevoJSession = bin2hex(random_bytes(10));
+        // A) Generar el NUEVO jsessionid (el string que verás en la BD)
+        // Usamos una cadena alfanumérica similar a la de tu captura (q2oiu...)
+        $nuevoJSession = substr(bin2hex(random_bytes(10)), 0, 20);
 
-        // B) ACTUALIZAR Firestore con el nuevo jsessionid (Método PATCH)
+        // B) ACTUALIZAR Firestore con este nuevo token (Método PATCH)
+        // Esto sobreescribe el campo jsessionid en el documento del empleado
         $updateUrl = "{$url}?updateMask.fieldPaths=jsessionid";
         $updateData = [
             "fields" => [
@@ -61,14 +68,15 @@ if ($httpCode == 200) {
         curl_exec($chUp);
         curl_close($chUp);
 
-        // C) Guardar en sesión y cookie
+        // C) Iniciar sesión y guardar Cookie
         session_start();
         $_SESSION['user'] = $usuarioDoc;
         $_SESSION['jsessionid'] = $nuevoJSession;
 
+        // Guardamos usuario|token en base64 para recuperarlo si refresca la página
         setcookie("auth_061_token", base64_encode($usuarioDoc . "|" . $nuevoJSession), time() + 86400, "/");
 
-        // D) Redirección FINAL con el parámetro en la URL
+        // D) Redirección al Selector pasando el token por parámetro GET
         header("Location: $destinoBase?jsessionid=$nuevoJSession");
         exit();
 
