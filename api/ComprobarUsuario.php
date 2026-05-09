@@ -1,15 +1,18 @@
 <?php
 // Configuración de tu proyecto Firebase
 $projectId = "yr92q8h4y5972h4y952qhy3f"; 
-$destinoFinal = "/modulo_acceso/controlador.061";
+$destinoBase = "/SelectorModulo.php";
 
-// 1. Verificar si ya existe una cookie de acceso previo
+// 1. Verificar si ya existe una cookie
 if (isset($_COOKIE['auth_061_token'])) {
-    header("Location: $destinoFinal");
+    // Si ya existe la cookie, recuperamos el token (que ahora tiene el ID pegado)
+    $data = explode("|", base64_decode($_COOKIE['auth_061_token']));
+    $idExistente = $data[1] ?? '';
+    header("Location: $destinoBase?jsessionid=$idExistente");
     exit();
 }
 
-// 2. Procesar el formulario POST
+// 2. Procesar POST
 $usuario = $_POST['usuario'] ?? '';
 $passInput = $_POST['password'] ?? '';
 
@@ -18,10 +21,9 @@ if (!$usuario || !$passInput) {
     exit();
 }
 
-// Limpiamos el ID del documento
 $usuarioDoc = preg_replace('/[^a-zA-Z0-9]/', '', $usuario);
 
-// 3. Consulta a Firestore
+// 3. Consulta a Firestore (GET)
 $url = "https://firestore.googleapis.com/v1/projects/{$projectId}/databases/(default)/documents/empleadosX/{$usuarioDoc}";
 
 $ch = curl_init();
@@ -34,26 +36,40 @@ curl_close($ch);
 
 if ($httpCode == 200) {
     $json = json_decode($response, true);
-    
-    // Extraemos la contraseña y el jsessionid del JSON de Firestore
     $passFirebase = $json['fields']['contrasena']['stringValue'] ?? '';
-    $jsessionidDB = $json['fields']['jsessionid']['stringValue'] ?? '';
 
     if ($passInput === $passFirebase) {
         // --- LOGIN EXITOSO ---
-        
+
+        // A) Generar un NUEVO jsessionid aleatorio (ejemplo: cadena alfanumérica de 20 caracteres)
+        $nuevoJSession = bin2hex(random_bytes(10));
+
+        // B) ACTUALIZAR Firestore con el nuevo jsessionid (Método PATCH)
+        $updateUrl = "{$url}?updateMask.fieldPaths=jsessionid";
+        $updateData = [
+            "fields" => [
+                "jsessionid" => ["stringValue" => $nuevoJSession]
+            ]
+        ];
+
+        $chUp = curl_init();
+        curl_setopt($chUp, CURLOPT_URL, $updateUrl);
+        curl_setopt($chUp, CURLOPT_CUSTOMREQUEST, 'PATCH');
+        curl_setopt($chUp, CURLOPT_POSTFIELDS, json_encode($updateData));
+        curl_setopt($chUp, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($chUp, CURLOPT_SSL_VERIFYPEER, false);
+        curl_exec($chUp);
+        curl_close($chUp);
+
+        // C) Guardar en sesión y cookie
         session_start();
         $_SESSION['user'] = $usuarioDoc;
-        // Guardamos el string de la BD en la sesión para que esté disponible en la siguiente página
-        $_SESSION['jsessionid'] = $jsessionidDB;
+        $_SESSION['jsessionid'] = $nuevoJSession;
 
-        // Creamos la COOKIE incluyendo el jsessionid (opcional, codificado en base64)
-        // Esto permite que el "cache" local también lo identifique
-        $cookieValue = base64_encode($usuarioDoc . "|" . $jsessionidDB);
-        setcookie("auth_061_token", $cookieValue, time() + 86400, "/");
+        setcookie("auth_061_token", base64_encode($usuarioDoc . "|" . $nuevoJSession), time() + 86400, "/");
 
-        // Redirección
-        header("Location: $destinoFinal");
+        // D) Redirección FINAL con el parámetro en la URL
+        header("Location: $destinoBase?jsessionid=$nuevoJSession");
         exit();
 
     } else {
