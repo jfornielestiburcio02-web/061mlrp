@@ -8,7 +8,7 @@ $mod = $_GET['modulo'] ?? '';
 
 if (!$jsid) die("Sesión no válida");
 
-// 2. VALIDACIÓN DE ROL 061
+// 2. VALIDACIÓN DE RANGO TES (Basado en el campo 'externo')
 $url = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/usuarios?key=$apiKey";
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -17,22 +17,36 @@ $json = json_decode($res, true);
 curl_close($ch);
 
 $autorizado = false;
+$nombrePersona = "";
+
 if (isset($json['documents'])) {
     foreach ($json['documents'] as $doc) {
         $f = $doc['fields'];
+        // Comprobar si el jsessionid coincide
         if (isset($f['jsessionid']['stringValue']) && $f['jsessionid']['stringValue'] === $jsid) {
-            // Verificar si "061" está en sus roles
+            $nombrePersona = $f['nombrePersona']['stringValue'] ?? 'Usuario';
+            
+            // Comprobar si en el array 'externo' existe el valor 'TES'
             if (isset($f['externo']['arrayValue']['values'])) {
-                foreach ($f['roles']['arrayValue']['values'] as $r) {
-                    if ($r['stringValue'] === "TES") { $autorizado = true; break; }
+                foreach ($f['externo']['arrayValue']['values'] as $r) {
+                    if ($r['stringValue'] === "TES") { 
+                        $autorizado = true; 
+                        break; 
+                    }
                 }
             }
+            break; // Usuario encontrado, dejamos de buscar en otros documentos
         }
     }
 }
 
 if (!$autorizado) {
-    die("Acceso Denegado: Este contenido es exclusivo para el rol 061.");
+    die("<div style='font-family:sans-serif; text-align:center; padding:50px;'>
+            <h1 style='color:#d93025;'>ACCESO DENEGADO</h1>
+            <p>Este contenido es exclusivo para el personal con rango <b>Técnico (TES)</b>.</p>
+            <hr style='width:50px; border:1px solid #ccc;'>
+            <small style='color:#666;'>Si crees que esto es un error, contacta con administración.</small>
+         </div>");
 }
 ?>
 <!DOCTYPE html>
