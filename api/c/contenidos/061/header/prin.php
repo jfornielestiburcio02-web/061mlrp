@@ -1,14 +1,20 @@
 <?php
-// 1. CONFIGURACIÓN Y VALIDACIÓN (Igual que el Sidebar para seguridad)
+// Desactivar en producción, útil ahora para ver si algo falla
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// 1. CONFIGURACIÓN
 $projectId = "yr92q8h4y5972h4y952qhy3f";
 $apiKey = "AIzaSyBwhUOE8XpDFGf7dsqEdfXh2FCWE94JR2w";
 
 $jsid = $_GET['jsessionid'] ?? '';
 $mod = $_GET['modulo'] ?? '';
 
-if (!$jsid) die("Error de sesión");
+if (!$jsid) {
+    die("Error: Sesión no recibida");
+}
 
-// Buscamos los datos del usuario en Firestore
+// 2. VALIDACIÓN Y OBTENCIÓN DE DATOS (Misma lógica que el Sidebar)
 $url = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/usuarios?key=$apiKey";
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -27,73 +33,112 @@ if (isset($json['documents'])) {
     }
 }
 
-if (!$userData) die("Sesión inválida");
+if (!$userData) {
+    die("Error: Usuario no encontrado");
+}
 
-// Extraer datos para el Header
+// 3. EXTRACCIÓN DE DATOS ESPECÍFICOS
 $nombre = $userData['nombrePersona']['stringValue'] ?? 'Usuario';
-$imgPerfil = $userData['imagenPerfil']['stringValue'] ?? 'https://via.placeholder.com/40';
+$imgPerfil = $userData['imagenPerfil']['stringValue'] ?? 'https://via.placeholder.com/50';
 
-// Extraer el array "externo"
+// Extraer array "externo"
 $externos = [];
 if (isset($userData['externo']['arrayValue']['values'])) {
     foreach ($userData['externo']['arrayValue']['values'] as $v) {
-        $externos[] = $v['stringValue'];
+        if (isset($v['stringValue'])) {
+            $externos[] = $v['stringValue'];
+        }
     }
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <style>
-        body { 
-            margin: 0; padding: 0 20px; height: 60px; 
-            background: #fff; border-bottom: 1px solid #ddd;
-            display: flex; align-items: center; justify-content: space-between;
-            font-family: Arial, sans-serif;
+        body {
+            margin: 0;
+            padding: 0 20px;
+            height: 60px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #007d48;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Verdana', sans-serif;
         }
-        .user-info { display: flex; align-items: center; }
-        .user-info img { 
-            width: 40px; height: 40px; border-radius: 50%; 
-            object-fit: cover; margin-right: 15px; border: 1px solid #ccc;
+
+        /* Lado Izquierdo: Perfil */
+        .perfil-box {
+            display: flex;
+            align-items: center;
         }
-        .user-info span { font-weight: bold; color: #333; font-size: 14px; }
-        
-        .roles-nav { display: flex; gap: 10px; }
-        .btn-externo {
-            background: #007d48; color: white; border: none;
-            padding: 8px 12px; border-radius: 4px; cursor: pointer;
-            font-size: 12px; font-weight: bold; transition: 0.2s;
+        .perfil-box img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #007d48;
+            margin-right: 12px;
         }
-        .btn-externo:hover { background: #005a34; }
-        .label-rol { font-size: 11px; color: #666; margin-right: 5px; align-self: center;}
+        .perfil-box .nombre {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Lado Derecho: Roles */
+        .roles-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .roles-box span {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .btn-rol {
+            background-color: #007d48;
+            color: white;
+            border: none;
+            padding: 7px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-rol:hover {
+            background-color: #005a34;
+        }
     </style>
 </head>
 <body>
 
-    <div class="user-info">
-        <img src="<?php echo $imgPerfil; ?>" alt="Perfil">
-        <span><?php echo $nombre; ?></span>
+    <div class="perfil-box">
+        <img src="<?php echo $imgPerfil; ?>" alt="Foto">
+        <div class="nombre"><?php echo $nombre; ?></div>
     </div>
 
-    <div class="roles-nav">
-        <span class="label-rol">Cambiar a:</span>
-        <?php foreach ($externos as $ext): ?>
-            <button class="btn-externo" onclick="cambiarRol('<?php echo $ext; ?>')">
-                <?php echo $ext; ?>
+    <div class="roles-box">
+        <span>Cambiar a:</span>
+        <?php foreach ($externos as $rol): ?>
+            <button class="btn-rol" onclick="recargarTodo('<?php echo $rol; ?>')">
+                <?php echo $rol; ?>
             </button>
-        <?php <?php endforeach; ?>
+        <?php endforeach; ?>
     </div>
 
     <script>
-    function cambiarRol(nuevoRol) {
-        // Obtenemos el jsessionid actual de la URL del header
-        const urlParams = new URLSearchParams(window.location.search);
-        const sid = urlParams.get('jsessionid');
+    function recargarTodo(nuevoModulo) {
+        // Obtenemos el jsessionid actual de PHP
+        const sid = "<?php echo $jsid; ?>";
         
-        // REGLA DE ORO: Para cambiar TODOS los iframes, redirigimos la ventana PADRE (top)
-        // Volvemos al CEC.php o al selector con el nuevo módulo
-        if (sid) {
-            window.top.location.href = "/m/acceso/CEC.php?modulo=" + nuevoRol + "&jsessionid=" + sid;
+        // IMPORTANTE: window.top recarga la página completa que contiene los iframes
+        // Esto actualiza el Sidebar, el Header y el Contenido al nuevo rol
+        if (confirm('¿Desea cambiar al módulo ' + nuevoModulo + '?')) {
+            window.top.location.href = "/m/acceso/CEC.php?modulo=" + nuevoModulo + "&jsessionid=" + sid;
         }
     }
     </script>
