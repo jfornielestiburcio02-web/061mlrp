@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre'])) {
             </div>
         </div>
         <button type="submit" class="btn-submit">GUARDAR EN BASE DE DATOS</button>
-        <a href="pacientes.php?jsessionid=<?php echo $jsid; ?>&modulo=<?php echo $mod; ?>" class="btn-volver">Cancelar y volver</a>
+        <a href="basedatos061.php?jsessionid=<?php echo $jsid; ?>&modulo=<?php echo $mod; ?>" class="btn-volver">Cancelar y volver</a>
     </form>
 </div>
 
