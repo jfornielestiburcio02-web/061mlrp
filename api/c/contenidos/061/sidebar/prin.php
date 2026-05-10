@@ -59,7 +59,7 @@ if (!in_array($modulo_url, $rolesDisponibles)) {
 
 // Variables para los enlaces
 $rolLower = strtolower($modulo_url);
-$authParams = "&jsessionid=$jsessionid_url"; // Usamos & porque ya habrá un ?modulo=
+$authParams = "?jsessionid=$jsessionid_url"; // Usamos & porque ya habrá un ?modulo=
 ?>
 <LINK REL="STYLESHEET" href="/css/cec.css">
 <div id="menu_lat" class="menu">
