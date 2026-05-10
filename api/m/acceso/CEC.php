@@ -79,7 +79,7 @@ $authParams = "?jsessionid=$jsessionid_url";
             width: 60px; /* Ancho contraído */
             height: 100%;
             transition: width 0.3s ease;
-            background: #2c3e50;
+            background: #fffff;
             z-index: 100;
         }
         #sidebar-container:hover {
