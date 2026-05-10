@@ -1,96 +1,69 @@
 <?php
-// 1. CONFIGURACIÓN (Exactamente como tu código)
+// Configuración
 $projectId = "yr92q8h4y5972h4y952qhy3f";
 $apiKey = "AIzaSyBwhUOE8XpDFGf7dsqEdfXh2FCWE94JR2w";
 
-$jsessionid_url = isset($_GET['jsessionid']) ? $_GET['jsessionid'] : '';
-$modulo_url = isset($_GET['modulo']) ? $_GET['modulo'] : '';
+$jsid = $_GET['jsessionid'] ?? '';
+$mod = $_GET['modulo'] ?? '';
 
-if (empty($jsessionid_url) || empty($modulo_url)) {
-    die("Se produció un error");
-}
+if (!$jsid) die("Se produció un error");
 
-// 2. FUNCIÓN BUSCAR (Tu lógica exacta)
-function buscarUsuario($projectId, $apiKey, $sessionId) {
-    $url = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents:runQuery?key=$apiKey";
-    $query = [
-        "structuredQuery" => [
-            "from" => [["collectionId" => "usuarios"]],
-            "where" => [
-                "fieldFilter" => [
-                    "field" => ["fieldPath" => "jsessionid"],
-                    "op" => "EQUAL",
-                    "value" => ["stringValue" => $sessionId]
-                ]
-            ],
-            "limit" => 1
-        ]
-    ];
+// BUSQUEDA ULTRA-SIMPLE: Solo pedimos los documentos de la colección 'usuarios'
+// Y filtramos por jsessionid de forma manual para evitar errores de la API Query
+$url = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/usuarios?key=$apiKey";
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($query));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    $response = curl_exec($ch);
-    $data = json_decode($response, true);
-    curl_close($ch);
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$res = curl_exec($ch);
+$json = json_decode($res, true);
+curl_close($ch);
 
-    return (isset($data[0]['document'])) ? $data[0]['document']['fields'] : null;
-}
+$autorizado = false;
+$userData = null;
 
-$userData = buscarUsuario($projectId, $apiKey, $jsessionid_url);
-
-if (!$userData) {
-    die("Se produció un error");
-}
-
-// 3. COMPROBAR ROL (Tu lógica exacta)
-$rolesDisponibles = [];
-if (isset($userData['roles']['arrayValue']['values'])) {
-    foreach ($userData['roles']['arrayValue']['values'] as $roleItem) {
-        $rolesDisponibles[] = $roleItem['stringValue'];
+// Recorremos los documentos para ver si el jsessionid coincide
+if (isset($json['documents'])) {
+    foreach ($json['documents'] as $doc) {
+        $fields = $doc['fields'];
+        if (isset($fields['jsessionid']['stringValue']) && $fields['jsessionid']['stringValue'] === $jsid) {
+            $userData = $fields;
+            $autorizado = true;
+            break;
+        }
     }
 }
 
-if (!in_array($modulo_url, $rolesDisponibles)) {
-    die("No tiene estos permisos");
-}
+if (!$autorizado) die("Se produció un error");
 
-// Variables para los enlaces
-$rolLower = strtolower($modulo_url);
-$authParams = "?jsessionid=$jsessionid_url"; // Usamos & porque ya habrá un ?modulo=
+// Preparar rutas
+$rolLow = strtolower($mod);
+$linkAuth = "?jsessionid=$jsid";
 ?>
-<LINK REL="STYLESHEET" href="/css/cec.css">
+
 <div id="menu_lat" class="menu">
-    
     <div class="contenedorImagenes">
         <div class="menu_handle">
-            <a class="Ntooltip">
-                <img src="https://rayuela.educarex.es/modulos/menu/imagenes/v3/seguimiento_centro.png" width="35" height="33">
-                <span>Seguimiento</span>
-            </a>
+            <img src="https://rayuela.educarex.es/modulos/menu/imagenes/v3/seguimiento_centro.png" width="35" height="33">
         </div>
         <div class="menu_handle">
-            <a class="Ntooltip">
-                <img src="https://rayuela.educarex.es/modulos/menu/imagenes/v3/comunicaciones.png" width="35" height="33">
-                <span>Comunicaciones</span>
-            </a>
+            <img src="https://rayuela.educarex.es/modulos/menu/imagenes/v3/comunicaciones.png" width="35" height="33">
         </div>
     </div>
 
     <div class="contenedorMenus">
         <div class="contenedorMenu">
-            <div class="nombremenu nombremenuNivel0"><?php echo ($modulo_url == '061') ? 'Gestión 061' : 'Dirección'; ?></div>
-            <div class="nombresubmenu">
+            <div class="nombremenu nombremenuNivel0">
+                <?php echo ($mod == '061') ? 'Gestión 061' : 'Dirección'; ?>
+            </div>
+            <div class="nombresubmenu" style="display:block;">
                 <div class="elementoAccion elementoAccionNivel1">
-                    <a href="/c/contenidos/<?php echo $rolLower; ?>/horario/prin.php?modulo=<?php echo $modulo_url . $authParams; ?>" target="mainFrame" class="eltoResaltado">Horarios</a>
+                    <a href="/c/contenidos/<?php echo $rolLow; ?>/horario/prin.php<?php echo $linkAuth; ?>" target="mainFrame" class="eltoResaltado">Horarios</a>
                 </div>
                 <div class="elementoAccion elementoAccionNivel1">
-                    <a href="/c/contenidos/<?php echo $rolLower; ?>/mensajeria/prin.php?modulo=<?php echo $modulo_url . $authParams; ?>" target="mainFrame" class="eltoResaltado">Mensajería</a>
+                    <a href="/c/contenidos/<?php echo $rolLow; ?>/mensajeria/prin.php<?php echo $linkAuth; ?>" target="mainFrame" class="eltoResaltado">Mensajería</a>
                 </div>
                 <div class="elementoAccion elementoAccionNivel1">
-                    <a href="/c/contenidos/<?php echo $rolLower; ?>/datos/prin.php?modulo=<?php echo $modulo_url . $authParams; ?>" target="mainFrame" class="eltoResaltado">Datos Personales</a>
+                    <a href="/c/contenidos/<?php echo $rolLow; ?>/config/prin.php<?php echo $linkAuth; ?>" target="mainFrame" class="eltoResaltado">Ajustes</a>
                 </div>
             </div>
         </div>
@@ -98,8 +71,7 @@ $authParams = "?jsessionid=$jsessionid_url"; // Usamos & porque ya habrá un ?mo
 </div>
 
 <style>
-    /* Forzar el comportamiento del Sidebar de Rayuela con tu CSS */
+    /* Tu CSS de Rayuela hará el resto, pero esto asegura el hover */
     #menu_lat:hover .contenedorMenus { display: block !important; }
     .contenedorMenu:hover .nombresubmenu { display: block !important; }
-    .nombresubmenu { display: none; } /* Se oculta por defecto */
 </style>
