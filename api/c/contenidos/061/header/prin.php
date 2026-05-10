@@ -38,7 +38,7 @@ if (!$userData) {
 }
 
 // 3. EXTRACCIÓN DE DATOS ESPECÍFICOS
-$nombre = $userData['nombrePersona']['stringValue'] ?? 'Usuario';
+$nombre = $userData['nombrePersona']['stringValue'] ?? 'No Identificado';
 $imgPerfil = $userData['imagenPerfil']['stringValue'] ?? 'https://via.placeholder.com/50';
 
 // Extraer array "externo"
@@ -118,7 +118,7 @@ if (isset($userData['externo']['arrayValue']['values'])) {
 
     <div class="perfil-box">
         <img src="<?php echo $imgPerfil; ?>" alt="Foto">
-        <div class="nombre"><?php echo $nombre; ?></div>
+        <div class="nombre"><?php echo $nombre; ?> (Personal 061) </div>
     </div>
 
     <div class="roles-box">
