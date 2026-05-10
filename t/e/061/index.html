@@ -1,79 +1,57 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Emergencias Andalucía</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-    }
-
-    .topbar {
-      background: #00843d;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 20px;
-    }
-
-    .left a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 15px;
-    }
-
-    .center {
-      text-align: center;
-      flex: 1;
-    }
-
-    .center h1 {
-      margin: 0;
-      font-size: 28px;
-    }
-
-    .center p {
-      margin: 4px 0 0 0;
-      font-size: 18px;
-    }
-
-    .logo {
-      text-align: center;
-      margin-top: 40px;
-    }
-
-    .logo img {
-      width: 320px;
-      max-width: 90%;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>061 Málaga RP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <LINK REL="STYLESHEET" HREF="/css/index.css">
 </head>
 <body>
 
-  <div class="topbar">
-    <div class="left">
-      <a href="/AccesoEmpleados.php">Acceso Empleados</a>
-    </div>
+    <header>
+        <div class="logo-section">
+            <img src="/imagenes/061.png" alt="Logo 061">
+            <h1>061 MÁLAGA RP</h1>
+        </div>
 
-    <div class="center">
-      <h1>Emergencias Andalucía Mala RP</h1>
-      <p>061</p>
-    </div>
+        <nav>
+            <a href="#servicios">Servicios</a>
+            <a href="#contacto">Contacto</a>
+            <a href="/AccesoEmpleados.php?rndval=189461284" class="btn-empleados">ACCESO EMPLEADOS</a>
+        </nav>
+    </header>
 
-    <div style="width: 140px;"></div>
-  </div>
+    <section class="hero">
+        <h2>Servicio de Emergencias Sanitarias</h2>
+        <p>Compromiso, rapidez y profesionalidad al servicio de la ciudad.</p>
+    </section>
 
-  <div class="logo">
-    <img src="https://www.platesa.org/wp-content/uploads/2024/05/061.jpg" alt="061 Andalucía">
-  </div>
+    <main class="content-section">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2>Información General</h2>
+            <p>Bienvenido al portal del 061 Málaga RP. Aquí gestionamos la coordinación de unidades médicas de respuesta rápida en el entorno de simulación.</p>
+        </div>
+
+        <div class="card-container">
+            <div class="card">
+                <h3>Emergencias 24/7</h3>
+                <p>Nuestras unidades están operativas durante todo el día para garantizar la seguridad de los ciudadanos.</p>
+            </div>
+            <div class="card">
+                <h3>Formación Técnica</h3>
+                <p>Contamos con los mejores protocolos de actuación para situaciones de alto riesgo y soporte vital.</p>
+            </div>
+            <div class="card">
+                <h3>Flota Moderna</h3>
+                <p>Equipamiento de última generación en todas nuestras ambulancias y vehículos de intervención rápida.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2024 061 Málaga RP - Creado para simulación y rol.
+    </footer>
 
 </body>
 </html>
