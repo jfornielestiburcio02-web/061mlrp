@@ -138,7 +138,7 @@ if (isset($userData['externo']['arrayValue']['values'])) {
         // IMPORTANTE: window.top recarga la página completa que contiene los iframes
         // Esto actualiza el Sidebar, el Header y el Contenido al nuevo rol
         if (confirm('¿Desea cambiar al módulo ' + nuevoModulo + '?')) {
-            window.top.location.href = "/m/acceso/CEC.php?jsessionid=" + sid + &nuevoModulo;
+            window.top.location.href = "/m/acceso/CEC.php?jsessionid=" + sid + "&modulo=" + nuevoModulo;
         }
     }
     </script>
