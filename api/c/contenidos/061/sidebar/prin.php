@@ -93,25 +93,25 @@ $linkAuth = "?jsessionid=$jsid";
             <div class="nombresubmenu">
                 
                 <div class="elementoAccion">
-                    <a href="/c/contenidos/061/contenidosCoso/entradaYSalida.php?jsessionid=<?php echo $linkAuth; ?>" 
+                    <a href="/c/contenidos/061/contenidosCoso/entradaYSalida.php<?php echo $linkAuth; ?>" 
                        target="mainFrame" 
                        class="eltoResaltado">Servicios</a>
                 </div>
 
                 <div class="elementoAccion">
-                    <a href="/c/contenidos/061/contenidosCoso/mensajeria.php?jsessionid=<?php echo $linkAuth; ?>" 
+                    <a href="/c/contenidos/061/contenidosCoso/mensajeria.php<?php echo $linkAuth; ?>" 
                        target="mainFrame" 
                        class="eltoResaltado">Mensajería</a>
                 </div>
 
                 <div class="elementoAccion">
-                    <a href="/c/contenidos/061/contenidosCoso/misdatos.php?jsessionid=<?php echo $linkAuth; ?>" 
+                    <a href="/c/contenidos/061/contenidosCoso/misdatos.php<?php echo $linkAuth; ?>" 
                        target="mainFrame" 
                        class="eltoResaltado">Mis Datos</a>
                 </div>
 
                 <div class="elementoAccion">
-                    <a href="/c/contenidos/061/contenidosCoso/basedatos061.php?jsessionid=<?php echo $linkAuth; ?>" 
+                    <a href="/c/contenidos/061/contenidosCoso/basedatos061.php<?php echo $linkAuth; ?>" 
                        target="mainFrame" 
                        class="eltoResaltado">Base de datos</a>
                 </div>
