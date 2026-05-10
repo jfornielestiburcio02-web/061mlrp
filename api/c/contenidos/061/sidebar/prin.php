@@ -69,7 +69,7 @@ $linkAuth = "?jsessionid=$jsid";
         </div>
     </div>
 </div>
-
+<LINK REL="STYLESHEET" href="/css/cec.css">
 <style>
     /* Tu CSS de Rayuela hará el resto, pero esto asegura el hover */
     #menu_lat:hover .contenedorMenus { display: block !important; }
