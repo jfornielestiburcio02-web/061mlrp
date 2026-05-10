@@ -106,7 +106,12 @@ if (isset($servicios_data['documents'])) {
     </style>
     
     <?php if ($ejecutarBack): ?>
-
+    <script>
+        // Si se ha procesado la acción, esperamos medio segundo y volvemos atrás
+        setTimeout(function() {
+            window.history.back();
+        }, 500);
+    </script>
     <?php endif; ?>
 </head>
 <body>
