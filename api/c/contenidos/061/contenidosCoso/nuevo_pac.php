@@ -1,13 +1,13 @@
-
 <?php
+// 1. TODA LA LÓGICA DE POST DEBE IR AL PRINCIPIO SIN ESPACIOS ANTES
 $projectId = "yr92q8h4y5972h4y952qhy3f";
 $apiKey = "AIzaSyBwhUOE8XpDFGf7dsqEdfXh2FCWE94JR2w";
 $jsid = $_GET['jsessionid'] ?? '';
 $mod = $_GET['modulo'] ?? '';
 
-// LÓGICA DE GUARDADO (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre'])) {
     $url = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/pacientes?key=$apiKey";
+    
     $body = ["fields" => [
         "nombre" => ["stringValue" => $_POST['nombre']],
         "dni" => ["stringValue" => $_POST['dni']],
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre'])) {
     curl_exec($ch);
     curl_close($ch);
 
-    // Volver al buscador
+    // Redirigir inmediatamente
     header("Location: pacientes.php?jsessionid=$jsid&modulo=$mod");
     exit;
 }
@@ -48,13 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre'])) {
         .full { grid-column: span 2; }
         .btn-submit { background: #007d48; color: white; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 16px; }
         .btn-submit:hover { background: #005a34; }
+        .btn-volver { display: block; text-align: center; margin-top: 15px; color: #666; text-decoration: none; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div class="form-card">
     <div class="banner">━━━━━━━━━━━━━━━━━━━━━━ SERVICIO DE SALUD DE MÁLAGA</div>
-    <form method="POST">
+    <form method="POST" action="nuevo_pac.php?jsessionid=<?php echo $jsid; ?>&modulo=<?php echo $mod; ?>">
         <div class="grid">
             <div class="field full">
                 <label>Nombre completo</label>
@@ -98,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre'])) {
             </div>
         </div>
         <button type="submit" class="btn-submit">GUARDAR EN BASE DE DATOS</button>
+        <a href="pacientes.php?jsessionid=<?php echo $jsid; ?>&modulo=<?php echo $mod; ?>" class="btn-volver">Cancelar y volver</a>
     </form>
 </div>
 
