@@ -120,7 +120,7 @@ $authParams = "?jsessionid=$jsessionid_url";
         </div>
 
         <div id="content-container">
-            <iframe src="<?php echo $baseUrl; ?>/contenidosCoso/prinb.php<?php echo $authParams; ?>"></iframe>
+                <iframe name="mainFrame" id="m_frame" src="<?php echo $baseUrl; ?>/contenidosCoso/prinb.php<?php echo $authParams; ?>"></iframe>
         </div>
     </div>
 </div>
