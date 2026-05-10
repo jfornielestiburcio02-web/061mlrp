@@ -10,7 +10,7 @@ if (empty($jsessionid_url) || empty($modulo_url)) {
     die("Se produció un error");
 }
 
-// 1. Buscar usuario por jsessionid (Misma lógica que sel.php)
+// 1. Buscar usuario por jsessionid
 function buscarUsuario($projectId, $apiKey, $sessionId) {
     $url = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents:runQuery?key=$apiKey";
     $query = [
@@ -45,48 +45,63 @@ if (!$userData) {
     die("Se produció un error");
 }
 
-// 2. Comprobar si el usuario tiene el rol (módulo) solicitado
-$rolesDisponibles = [];
+// 2. VALIDACIÓN COMPUESTA (Roles + Externos)
+$autorizado = false;
+
+// Comprobar en el array 'roles'
 if (isset($userData['roles']['arrayValue']['values'])) {
     foreach ($userData['roles']['arrayValue']['values'] as $roleItem) {
-        $rolesDisponibles[] = $roleItem['stringValue'];
+        if ($roleItem['stringValue'] === $modulo_url) {
+            $autorizado = true;
+            break;
+        }
     }
 }
 
-if (!in_array($modulo_url, $rolesDisponibles)) {
-    die("No tiene estos permisos");
+// Comprobar en el array 'externo' (Médico, TES, Enfermero) si aún no está autorizado
+if (!$autorizado && isset($userData['externo']['arrayValue']['values'])) {
+    foreach ($userData['externo']['arrayValue']['values'] as $extItem) {
+        if ($extItem['stringValue'] === $modulo_url) {
+            $autorizado = true;
+            break;
+        }
+    }
 }
 
-// 3. Preparar variables para las URLs de los iframes
+if (!$autorizado) {
+    die("No tiene estos permisos para el perfil: " . htmlspecialchars($modulo_url));
+}
+
+// 3. Preparar variables
 $rolLower = strtolower($modulo_url);
 $baseUrl = "/c/contenidos/$rolLower";
-$authParams = "?jsessionid=$jsessionid_url";
+$authParams = "?jsessionid=$jsessionid_url&modulo=$modulo_url";
 
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Control - <?php echo $modulo_url; ?></title>
+    <title>Panel de Control - <?php echo htmlspecialchars($modulo_url); ?></title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: Arial, sans-serif; background: #f4f4f4; }
         
-        /* Contenedor Principal */
         .wrapper { display: flex; height: 100vh; width: 100vw; }
 
-        /* Estética del Sidebar que se abre al pasar el ratón */
+        /* Sidebar dinámico */
         #sidebar-container {
-            width: 60px; /* Ancho contraído */
+            width: 50px; 
             height: 100%;
             transition: width 0.3s ease;
-            background: #fffff;
-            z-index: 100;
+            background: #fff;
+            z-index: 1000;
+            border-right: 1px solid #ddd;
+            overflow: hidden;
         }
         #sidebar-container:hover {
-            width: 250px; /* Ancho expandido */
+            width: 220px; 
         }
 
-        /* Área de Contenido (Header + Main) */
         .main-area {
             flex-grow: 1;
             display: flex;
@@ -96,15 +111,17 @@ $authParams = "?jsessionid=$jsessionid_url";
         #header-container {
             height: 60px;
             width: 100%;
-            border-bottom: 1px solid #ccc;
+            background: #fff;
+            border-bottom: 2px solid #007d48;
         }
 
         #content-container {
             flex-grow: 1;
             width: 100%;
+            background: #fff;
         }
 
-        iframe { border: none; width: 100%; height: 100%; }
+        iframe { border: none; width: 100%; height: 100%; display: block; }
     </style>
 </head>
 <body>
@@ -120,7 +137,7 @@ $authParams = "?jsessionid=$jsessionid_url";
         </div>
 
         <div id="content-container">
-                <iframe name="mainFrame" id="m_frame" src="<?php echo $baseUrl; ?>/contenidosCoso/prinb.php<?php echo $authParams; ?>"></iframe>
+            <iframe name="mainFrame" id="m_frame" src="<?php echo $baseUrl; ?>/contenidosCoso/prinb.php<?php echo $authParams; ?>"></iframe>
         </div>
     </div>
 </div>
