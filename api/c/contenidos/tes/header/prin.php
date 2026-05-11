@@ -124,6 +124,7 @@ if (isset($userData['externo']['arrayValue']['values'])) {
 
     <div class="roles-box">
         <span>Cambiar a:</span>
+        <button class="btn-rol" onclick="recargarTodo('061')"/>
         <?php foreach ($externos as $rol): ?>
             <button class="btn-rol" onclick="recargarTodo('<?php echo $rol; ?>')">
                 <?php echo $rol; ?>
