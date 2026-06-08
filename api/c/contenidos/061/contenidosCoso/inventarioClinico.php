@@ -2,25 +2,12 @@
 $projectId = "yr92q8h4y5972h4y952qhy3f";
 $basePath = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents";
 
-// 1. VALIDACIÓN ESTRICTA DE SESIÓN
 $jsessionid = $_GET['jsessionid'] ?? '';
-$esValido = false;
+$accesoPermitido = false;
 
+// 1. VALIDACIÓN ESTRICTA
 if (!empty($jsessionid)) {
-    // Consulta para buscar al usuario por su jsessionid
-    $query = [
-        'structuredQuery' => [
-            'from' => [['collectionId' => 'usuarios']],
-            'where' => [
-                'fieldFilter' => [
-                    'field' => ['fieldPath' => 'jsessionid'],
-                    'op' => 'EQUAL',
-                    'value' => ['stringValue' => $jsessionid]
-                ]
-            ]
-        ]
-    ];
-
+    $query = ['structuredQuery' => ['from' => [['collectionId' => 'usuarios']], 'where' => ['fieldFilter' => ['field' => ['fieldPath' => 'jsessionid'], 'op' => 'EQUAL', 'value' => ['stringValue' => $jsessionid]]]]];
     $ch = curl_init("$basePath:runQuery");
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($query));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
@@ -29,25 +16,21 @@ if (!empty($jsessionid)) {
     $data = json_decode($res, true);
     curl_close($ch);
 
-    // Verificar si el documento existe y si '061' está en el array 'roles'
-    if (!empty($data[0]['document']['fields']['roles']['arrayValue']['values'])) {
-        foreach ($data[0]['document']['fields']['roles']['arrayValue']['values'] as $r) {
-            if ($r['stringValue'] === '061') {
-                $esValido = true;
+    if (isset($data[0]['document']['fields']['roles']['arrayValue']['values'])) {
+        foreach ($data[0]['document']['fields']['roles']['arrayValue']['values'] as $item) {
+            if (isset($item['stringValue']) && $item['stringValue'] === '061') {
+                $accesoPermitido = true;
                 break;
             }
         }
     }
 }
 
-if (!$esValido) {
-    die("<h1 style='color:red; font-family:sans-serif;'>Acceso Denegado: JSESSIONID inválido o sin rol 061.</h1>");
-}
+if (!$accesoPermitido) { die("Acceso denegado: El usuario no tiene el rol 061."); }
 
-// 2. LÓGICA DE ACCIONES (SOLO LLEGA AQUÍ SI ES VÁLIDO)
+// 2. ACCIONES
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    $ch = curl_init("$basePath/inventario/$id");
+    $ch = curl_init("$basePath/inventario/" . $_GET['delete']);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
     curl_exec($ch);
     curl_close($ch);
@@ -56,18 +39,15 @@ if (isset($_GET['delete'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['nombre'])) {
-    $data = [
-        'fields' => [
-            'nombre' => ['stringValue' => $_POST['nombre']],
-            'unidades' => ['integerValue' => (int)$_POST['unidades']],
-            'medicable' => ['booleanValue' => isset($_POST['medicable'])],
-            'precio' => ['doubleValue' => (float)$_POST['precio']]
-        ]
-    ];
+    $data = ['fields' => [
+        'nombre' => ['stringValue' => $_POST['nombre']],
+        'unidades' => ['integerValue' => (int)$_POST['unidades']],
+        'medicable' => ['booleanValue' => isset($_POST['medicable'])],
+        'precio' => ['doubleValue' => (float)$_POST['precio']]
+    ]];
     $ch = curl_init("$basePath/inventario");
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_exec($ch);
     curl_close($ch);
     header("Location: ?jsessionid=$jsessionid");
@@ -89,15 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['nombre'])) {
 </head>
 <body>
 <div class="container">
-    <h1>Gestión de Inventario</h1>
+    <h1>Inventario</h1>
     <form method="POST">
-        <input type="text" name="nombre" placeholder="Nombre Objeto" required>
+        <input type="text" name="nombre" placeholder="Nombre" required>
         <input type="number" name="unidades" placeholder="Unidades" required>
         <input type="number" step="0.01" name="precio" placeholder="Precio" required>
         <label><input type="checkbox" name="medicable"> ¿Es Medicable?</label>
-        <button type="submit">Registrar Objeto</button>
+        <button type="submit">Guardar</button>
     </form>
-
     <table>
         <tr><th>Nombre</th><th>Precio</th><th>Acción</th></tr>
         <?php
@@ -107,11 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['nombre'])) {
             foreach ($json['documents'] as $doc) {
                 $id = basename($doc['name']);
                 $f = $doc['fields'];
-                echo "<tr>
-                    <td>{$f['nombre']['stringValue']}</td>
-                    <td>{$f['precio']['doubleValue']}</td>
-                    <td><a href='?delete=$id&jsessionid=$jsessionid' style='color:red;'>Eliminar</a></td>
-                </tr>";
+                echo "<tr><td>{$f['nombre']['stringValue']}</td><td>{$f['precio']['doubleValue']}</td><td><a href='?delete=$id&jsessionid=$jsessionid'>Eliminar</a></td></tr>";
             }
         }
         ?>
