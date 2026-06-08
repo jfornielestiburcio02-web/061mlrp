@@ -122,6 +122,12 @@ $linkAuth = "?jsessionid=$jsid";
                        class="eltoResaltado">Historiales Clínicos</a>
                 </div>
 
+                <div class="elementoAccion">
+                    <a href="/c/contenidos/061/contenidosCoso/inventarioClinico.php<?php echo $linkAuth; ?>" 
+                       target="mainFrame" 
+                       class="eltoResaltado">Inventario Clínicio</a>
+                </div>
+
             </div>
         </div>
     </div>
