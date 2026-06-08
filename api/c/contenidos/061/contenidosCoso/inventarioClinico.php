@@ -5,7 +5,7 @@ $basePath = "https://firestore.googleapis.com/v1/projects/$projectId/databases/(
 $jsessionid = $_GET['jsessionid'] ?? '';
 $accesoPermitido = false;
 
-// 1. VALIDACIÓN ESTRICTA
+// 1. VALIDACIÓN
 if (!empty($jsessionid)) {
     $query = ['structuredQuery' => ['from' => [['collectionId' => 'usuarios']], 'where' => ['fieldFilter' => ['field' => ['fieldPath' => 'jsessionid'], 'op' => 'EQUAL', 'value' => ['stringValue' => $jsessionid]]]]];
     $ch = curl_init("$basePath:runQuery");
@@ -26,9 +26,9 @@ if (!empty($jsessionid)) {
     }
 }
 
-if (!$accesoPermitido) { die("Acceso denegado: El usuario no tiene el rol 061."); }
+if (!$accesoPermitido) { die("Acceso denegado: Rol 061 no validado."); }
 
-// 2. ACCIONES
+// 2. ACCIONES (Procesar antes de enviar NADA al navegador)
 if (isset($_GET['delete'])) {
     $ch = curl_init("$basePath/inventario/" . $_GET['delete']);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['nombre'])) {
     $ch = curl_init("$basePath/inventario");
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_exec($ch);
     curl_close($ch);
     header("Location: ?jsessionid=$jsessionid");
@@ -58,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['nombre'])) {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <title>Inventario</title>
     <style>
         body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
         .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -86,7 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['nombre'])) {
             foreach ($json['documents'] as $doc) {
                 $id = basename($doc['name']);
                 $f = $doc['fields'];
-                echo "<tr><td>{$f['nombre']['stringValue']}</td><td>{$f['precio']['doubleValue']}</td><td><a href='?delete=$id&jsessionid=$jsessionid'>Eliminar</a></td></tr>";
+                // Nota: Verificamos si existe el campo antes de imprimir para evitar errores
+                $nombre = $f['nombre']['stringValue'] ?? 'N/A';
+                $precio = $f['precio']['doubleValue'] ?? 0;
+                echo "<tr><td>$nombre</td><td>$precio</td><td><a href='?delete=$id&jsessionid=$jsessionid'>Eliminar</a></td></tr>";
             }
         }
         ?>
